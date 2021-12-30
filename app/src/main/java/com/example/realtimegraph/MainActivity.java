@@ -7,6 +7,8 @@ import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcelable;
@@ -31,7 +33,7 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     SparseArray<?> test=new SparseArray<>();
-    double[] y1={-12796, -5088, 4179, 12475, 19350, 25224, 29317, 30638, 29813, 28171,26095, 23703,21981, 21589, 21501, 20537, 19350, 19168, 19407, 18597, 17071, 16631, 17621, 18271, 17635,16659, 16202, 15524, 13732, 11347, 9316, 7585, 5728, 4004, 2726, 1403, -241, -1569, -1826, -1837, -2548, -3288, -2889, -1902, -1869, -2860, -3528, -3478, -3732, -4682, -5485, -5716,-5914, -6254, -6182, -5803, -5965, -6529,
+    float[] y1={-12796, -5088, 4179, 12475, 19350, 25224, 29317, 30638, 29813, 28171,26095, 23703,21981, 21589, 21501, 20537, 19350, 19168, 19407, 18597, 17071, 16631, 17621, 18271, 17635,16659, 16202, 15524, 13732, 11347, 9316, 7585, 5728, 4004, 2726, 1403, -241, -1569, -1826, -1837, -2548, -3288, -2889, -1902, -1869, -2860, -3528, -3478, -3732, -4682, -5485, -5716,-5914, -6254, -6182, -5803, -5965, -6529,
             -6316, -5279, -4934, -5841, -6495, -5848, -5171,-5902, -7185, -7305, -6399, -5967, -6302, -6386, -5848, -5382, -5352, -5408, -5431, -5518, -5233, -4085,-2600, -1668, -1012, 322, 2049, 2735, 1989, 1091, 966, 942, 155, -908, -1211, -735, -269, -218, -345,-388, -365, -382, -620, -1249, -2119, -2867, -3429, -4166, -5156, -5780, -5392, -3931, -1708, 1152, 4609,8277, 11502, 13602,
             14067, 12733, 9917, 6269, 2271, -1725, -5112, -7147, -7634, -7069, -5975, -4492, -2809, -1395, -514, 61, 543, 791, 824, 1059, 1672, 2217, 2316, 2323, 2674, 3077, 2982, 2488, 2157, 2045, 1703, 986, 259, -236, -616, -920, -1011, -960, -984, -1031, -877, -678, -852, -1338, -1573, -1331, -1074, -1132, -1157, -739, -131, 132, -40, -297, -474, -738, -1215, -1800,
             -2297, -2595, -2634, -2500, -2397, -2378, -2310, -2110, -1982, -2150, -2487, -2697, -2689, -2655, -2726, -2806, -2779, -2665, -2588, -2664, -2878, -3120, -3295, -3477, -3820, -4305, -4725, -4934, -5007, -5026, -4863, -4402, -3747, -3094, -2548, -2133, -1943, -2041, -2306, -2565, -2768, -2928, -2894, -2493, -1815, -1096, -414, 337, 1154, 1836, 2279, 2571, 2768, 2822, 2691, 2455, 2200, 1875,
@@ -44,63 +46,32 @@ public class MainActivity extends AppCompatActivity {
     //Viewport viewport;
     private int lastX=0;
     GraphView graphview;
+    ImageView vieww;
 
     @SuppressLint("WrongThread")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        graphview=(GraphView) findViewById(R.id.graph);
-        series = new LineGraphSeries<DataPoint>();
-
-        graphview.addSeries(series);
-
-        graphview.getViewport().setScrollable(true);
-        graphview.getViewport().setXAxisBoundsManual(true);
-        graphview.getViewport().setYAxisBoundsManual(true);
-        graphview.getViewport().setMinY(-200000);
-        graphview.getViewport().setMaxY(200000);
-        graphview.getViewport().setMinX(0);
-        graphview.getViewport().setMaxX(232);
-        graphview.setPivotX(0);
-
-        graphview.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
-        graphview.getGridLabelRenderer().setVerticalLabelsVisible(false);
-        graphview.getGridLabelRenderer().setHorizontalLabelsVisible(false);
-        graphview.setBackgroundResource(R.drawable.ecgbg);
-
-        series.setColor(Color.RED);
-        series.setThickness(4);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < y1.length; i++) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            addEntry();
-                        }
-                    });
-                    try {
-                        Thread.sleep(25);
-                    } catch (InterruptedException e) {
-
-                    }
-
-                }
-            }
-        }).start();
-
-    saveImg();
+        vieww=findViewById(R.id.imageView);
+        Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
+        int w=400,h=500;
+        Bitmap img = Bitmap.createBitmap(w, h, conf);
+        Canvas c=new Canvas(img);
+        Paint paint = new Paint();
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(2);
+        paint.setColor(Color.BLACK);
+        lastX=0;
+        Path p=new Path();
+        for (int i = 0; i < y1.length-1; i++) {
+            p.lineTo(lastX,y1[i]/500);
+            c.drawPath(p,paint);
+            lastX+=10;
+        }
+        vieww.setImageBitmap(img);
     }
 
-    private void addEntry(){
-
-        // on below line we are adding data to our graph view.
-        series.appendData(new DataPoint(lastX, y1[lastX]),true,406);//58*7
-        lastX++;
-    }
-    Bitmap img;
     public void saveImg(){
         Bitmap img = null;
         graphview.setDrawingCacheEnabled(true);
